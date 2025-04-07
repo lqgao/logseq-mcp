@@ -24,13 +24,11 @@ This project provides a set of Model Context Protocol (MCP) tools that enable AI
    {
      "mcpServers": {
        "logseq": {
-         "command": "uv",
-         "args": ["--directory", "/path/to/logseq_mcp", "run", "logseq-mcp"],
-         "config": {
-           "logseq": {
-             "api_url": "http://localhost:12315",
-             "token": "your-logseq-api-token"
-           }
+         "command": "/opt/homebrew/bin/uvx",
+         "args": ["logseq-mcp"],
+         "env": {
+           "LOGSEQ_API_URL": "http://localhost:12315",
+           "LOGSEQ_TOKEN": "your-token-here"
          }
        }
      }
@@ -113,4 +111,12 @@ Blocks in Logseq have some important characteristics to understand:
 
 ### Example Usage for Common Tasks
 
-**Creating a journal entry with linked page:**
+**Working with the Cursor agent:**
+When you have Logseq MCP tools configured in Cursor, you can give the agent prompts like:
+
+- "Create a new page called 'Meeting Notes' with bullet points for today's agenda"
+- "Add today's tasks to my journal page with a 'Tasks' section"
+- "Update today's journal entry with [[Project Plan]], set its child element to 'Completed milestone 1'"
+- "Search my graph for blocks about 'python projects' and organize them on a new page"
+
+The agent will use the appropriate Logseq tools to carry out these operations on your graph.

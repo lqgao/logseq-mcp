@@ -1,7 +1,4 @@
-import json
 import requests
-import time
-import uuid
 import os
 from typing import Dict, List, Optional, Any, Union
 
@@ -17,12 +14,9 @@ class LogseqAPIClient:
             api_url: URL of the Logseq API (default from mcp config)
             token: API token for authentication (default from mcp config)
         """
-        # Get config from mcp
-        from ..mcp import mcp
-        config = mcp.config.get("logseq", {})
         
-        self.api_url = api_url or config.get("api_url", "http://localhost:12315")
-        self.token = token or config.get("token")
+        self.api_url = api_url or os.getenv("LOGSEQ_API_URL", "http://localhost:12315")
+        self.token = token or os.getenv("LOGSEQ_TOKEN")
     
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for API requests"""
