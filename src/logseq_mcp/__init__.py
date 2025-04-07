@@ -15,7 +15,7 @@ import inspect
 
 __all__ = ["get_all_pages", "get_page", "create_page", "get_page_blocks", "get_block", "create_block", "update_block", "search_blocks"]
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 def main():
   """Main function to run the Logseq MCP server"""
