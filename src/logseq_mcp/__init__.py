@@ -9,13 +9,13 @@ from .tools import (
     create_block, 
     update_block,
     search_blocks,
+    get_page_linked_references,
 )
 import os
 import inspect
 
-__all__ = ["get_all_pages", "get_page", "create_page", "get_page_blocks", "get_block", "create_block", "update_block", "search_blocks"]
+__all__ = ["get_all_pages", "get_page", "create_page", "get_page_blocks", "get_block", "create_block", "update_block", "search_blocks", "get_page_linked_references"]
 
-__version__ = "0.1.1"
 
 def main():
   """Main function to run the Logseq MCP server"""

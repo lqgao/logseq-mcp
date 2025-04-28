@@ -79,4 +79,23 @@ def delete_page(name: str) -> Dict:
         dict: Result of the deletion operation.
     """
     """Delete a page from the Logseq graph."""
-    return logseq_client.delete_page(name) 
+    return logseq_client.delete_page(name)
+
+@mcp.tool()
+def get_page_linked_references(page_name: str) -> List[Dict]:
+    """
+    Gets all linked references to a specific page in the Logseq graph.
+    
+    This returns blocks that contain links to the specified page using
+    the Logseq double bracket notation: [[Page Name]].
+    
+    For journal pages, use the format "mmm dth, yyyy" (e.g., "Apr 4th, 2025").
+    
+    Args:
+        page_name (str): The name of the page to find references to.
+        
+    Returns:
+        list: A list of blocks that reference the specified page.
+    """
+    """Get all blocks that link to the specified page."""
+    return logseq_client.get_page_linked_references(page_name) 
