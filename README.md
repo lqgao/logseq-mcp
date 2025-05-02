@@ -34,6 +34,12 @@ This project provides a set of Model Context Protocol (MCP) tools that enable AI
      }
    }
    ```
+OR
+
+3. Configure Claude Code to use the MCP server with:
+```
+claude mcp add logseq --command "/opt/homebrew/bin/uvx" --args "logseq-mcp" --env LOGSEQ_API_URL=http://localhost:12315 --env LOGSEQ_TOKEN=your-token-here
+```
 
 ## Using with Cursor and Claude
 
