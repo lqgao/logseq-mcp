@@ -1,12 +1,12 @@
 import requests
 import os
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 
 
 class LogseqAPIClient:
     """Client for interacting with the Logseq API"""
     
-    def __init__(self, api_url: str = None, token: str = None):
+    def __init__(self, api_url: Optional[str] = None, token: Optional[str] = None) -> None:
         """
         Initialize the Logseq API client
         
@@ -27,7 +27,7 @@ class LogseqAPIClient:
             headers["Authorization"] = f"Bearer {self.token}"
         return headers
     
-    def call_api(self, method: str, args: List = None) -> Any:
+    def call_api(self, method: str, args: Optional[List] = None) -> Any:
         """
         Call the Logseq API using the proper format
         
@@ -104,7 +104,7 @@ class LogseqAPIClient:
             return response
         return response.get("result", []) if isinstance(response, dict) else []
     
-    def create_page(self, page_name: str, properties: Dict = None) -> Dict:
+    def create_page(self, page_name: str, properties: Optional[Dict] = None) -> Dict:
         """Create a new page"""
         params = [page_name]
         if properties:
@@ -114,7 +114,7 @@ class LogseqAPIClient:
             return response.get("result")
         return response
     
-    def create_block(self, page_name: str, content: str, properties: Dict = None) -> Dict:
+    def create_block(self, page_name: str, content: str, properties: Optional[Dict] = None) -> Dict:
         """Create a new block on a page"""
         params = [page_name, content]
         if properties:
@@ -124,7 +124,7 @@ class LogseqAPIClient:
             return response.get("result")
         return response
     
-    def update_block(self, block_id: str, content: str, properties: Dict = None) -> Dict:
+    def update_block(self, block_id: str, content: str, properties: Optional[Dict] = None) -> Dict:
         """Update an existing block"""
         params = [block_id, content]
         if properties:
@@ -169,7 +169,7 @@ class LogseqAPIClient:
             return response.get("result")
         return response
     
-    def insert_block(self, parent_block_id: str, content: str, properties: Dict = None, before: bool = False) -> Dict:
+    def insert_block(self, parent_block_id: str, content: str, properties: Optional[Dict] = None, before: bool = False) -> Dict:
         """Insert a new block as a child of the specified parent block"""
         params = [parent_block_id, content]
         if properties:
