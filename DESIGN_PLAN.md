@@ -14,6 +14,7 @@ This phased design plan addresses the identified improvements for the Logseq MCP
   - No native batch operations or transaction support
   - Performance degrades with ~10,000 interconnected pages
   - Memory issues with large datasets
+  - **Block Content Restrictions**: Each block can only contain a single paragraph or list type - no mixing of multiple unordered lists or headings within one block
 
 ### FastMCP Framework
 - **Resource Pattern**: `@mcp.resource("protocol://path/{param}")` decorator
@@ -128,6 +129,10 @@ This phased design plan addresses the identified improvements for the Logseq MCP
   - Use `os.path.getmtime()` for modification timestamps
   - Consider watching file system for real-time updates
 - **Graph Location**: Need to determine Logseq graph directory from API or configuration
+- **Content Formatting**:
+  - Ensure resources return content that respects Logseq's block limitations
+  - Split complex content into multiple blocks when necessary
+  - Avoid mixing lists, headings, or paragraphs within a single block
 
 ## Phase 3: MCP Prompts Implementation
 **Priority:** Medium  
@@ -145,10 +150,12 @@ This phased design plan addresses the identified improvements for the Logseq MCP
    @mcp.prompt()
    async def daily_journal_prompt():
        return """Create a daily journal entry with sections for:
-       - Daily goals
-       - Tasks
-       - Notes
-       - Reflection"""
+       Daily goals (create as separate block)
+       Tasks (create as separate block)
+       Notes (create as separate block)
+       Reflection (create as separate block)
+       
+       Note: Each section must be a separate block due to Logseq limitations."""
    ```
 
 2. **create_project** - Project page creation
@@ -209,9 +216,15 @@ This phased design plan addresses the identified improvements for the Logseq MCP
        template = await get_template(template_name)
        
        # Replace variables and create blocks
+       # IMPORTANT: Split content if it contains multiple lists or mixed content types
        for block in template['blocks']:
            content = replace_variables(block['content'], variables)
-           await create_block(page_name, content)
+           # Check if content needs to be split into multiple blocks
+           if needs_splitting(content):
+               for sub_content in split_content(content):
+                   await create_block(page_name, sub_content)
+           else:
+               await create_block(page_name, content)
        
        return page
    ```
@@ -418,6 +431,104 @@ def get_file_metadata(file_path: Path) -> dict:
     }
 ```
 
+### Content Formatting Helpers
+```python
+# utils/content_formatter.py
+import re
+from typing import List
+
+def needs_splitting(content: str) -> bool:
+    """
+    Check if content needs to be split into multiple blocks.
+    
+    Returns True if content contains:
+    - Multiple unordered lists
+    - Multiple ordered lists  
+    - Mixed content types (headings + lists, multiple paragraphs with lists, etc.)
+    """
+    lines = content.strip().split('\n')
+    
+    has_heading = any(line.strip().startswith('#') for line in lines)
+    has_unordered_list = any(line.strip().startswith(('- ', '* ', '+ ')) for line in lines)
+    has_ordered_list = any(re.match(r'^\d+\.', line.strip()) for line in lines)
+    
+    # Count different content types
+    content_types = sum([has_heading, has_unordered_list, has_ordered_list])
+    
+    # Check for multiple lists
+    list_groups = []
+    current_group = []
+    for line in lines:
+        if line.strip().startswith(('- ', '* ', '+ ', '1.', '2.', '3.')):
+            current_group.append(line)
+        else:
+            if current_group:
+                list_groups.append(current_group)
+                current_group = []
+    if current_group:
+        list_groups.append(current_group)
+    
+    return content_types > 1 or len(list_groups) > 1
+
+def split_content(content: str) -> List[str]:
+    """
+    Split content into multiple blocks that Logseq can properly display.
+    
+    Rules:
+    - Each heading becomes its own block
+    - Each list (ordered or unordered) becomes its own block
+    - Each paragraph becomes its own block
+    """
+    lines = content.strip().split('\n')
+    blocks = []
+    current_block = []
+    current_type = None
+    
+    for line in lines:
+        line_stripped = line.strip()
+        
+        # Determine line type
+        if line_stripped.startswith('#'):
+            line_type = 'heading'
+        elif line_stripped.startswith(('- ', '* ', '+ ')):
+            line_type = 'unordered_list'
+        elif re.match(r'^\d+\.', line_stripped):
+            line_type = 'ordered_list'
+        elif line_stripped:
+            line_type = 'paragraph'
+        else:
+            line_type = 'empty'
+        
+        # Handle type changes
+        if line_type != 'empty':
+            if current_type and line_type != current_type:
+                # Save current block and start new one
+                if current_block:
+                    blocks.append('\\n'.join(current_block))
+                current_block = [line]
+                current_type = line_type
+            else:
+                current_block.append(line)
+                if not current_type:
+                    current_type = line_type
+    
+    # Don't forget the last block
+    if current_block:
+        blocks.append('\\n'.join(current_block))
+    
+    return blocks
+
+def format_for_logseq(content: str) -> List[str]:
+    """
+    Format content for Logseq, splitting into multiple blocks if necessary.
+    
+    Returns a list of content strings, each suitable for a single Logseq block.
+    """
+    if needs_splitting(content):
+        return split_content(content)
+    return [content]
+```
+
 ### Caching Implementation
 ```python
 # utils/cache.py
@@ -539,6 +650,10 @@ async def retry_local_operation(func, max_retries=3):
 - Update README with new features
 - Create examples directory with usage scenarios
 - Add configuration guide for resources
+- **Add Logseq Block Content Guidelines**:
+  - Document that each block can only contain one content type
+  - Provide examples of how to split complex content into multiple blocks
+  - Include utility functions for content splitting
 
 ## Success Metrics
 - Reduced API calls for common operations (target: 50% reduction using caching and file metadata)
