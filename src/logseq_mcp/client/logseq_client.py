@@ -88,7 +88,16 @@ class LogseqAPIClient:
         response = self.call_api("logseq.Editor.getPage", [page_name])
         if response is None:
             return None
-        return response.get("result") if isinstance(response, dict) else response
+        # Handle both direct response and wrapped response formats
+        if isinstance(response, dict):
+            if "result" in response:
+                return response.get("result")
+            elif "error" in response:
+                return None
+            else:
+                # Direct response format (like logseq.Editor.getPage)
+                return response
+        return response
     
     def get_page_blocks(self, page_name: str) -> List[Dict]:
         """Get all blocks for a page"""
@@ -100,9 +109,23 @@ class LogseqAPIClient:
     def search_blocks(self, query: str) -> List[Dict]:
         """Search for blocks matching a query"""
         response = self.call_api("logseq.Editor.search", [query])
+        if response is None:
+            return []
+        
+        # Handle the specific format returned by logseq.Editor.search
+        if isinstance(response, dict):
+            if "blocks" in response:
+                return response.get("blocks", [])
+            elif "result" in response:
+                return response.get("result", [])
+            elif "error" in response:
+                return []
+        
+        # Handle direct array response
         if isinstance(response, list):
             return response
-        return response.get("result", []) if isinstance(response, dict) else []
+            
+        return []
     
     def create_page(self, page_name: str, properties: Optional[Dict] = None) -> Dict:
         """Create a new page"""
@@ -139,7 +162,16 @@ class LogseqAPIClient:
         response = self.call_api("logseq.Editor.getBlock", [block_id])
         if response is None:
             return None
-        return response.get("result") if isinstance(response, dict) else response
+        # Handle both direct response and wrapped response formats
+        if isinstance(response, dict):
+            if "error" in response:
+                return None  # Return None for error responses
+            elif "result" in response:
+                return response.get("result")
+            else:
+                # Direct response format
+                return response
+        return response
     
     def get_block_properties(self, block_id: str) -> Dict:
         """Get properties of a block"""
@@ -201,3 +233,10 @@ class LogseqAPIClient:
         if isinstance(response, dict) and "result" in response:
             return response.get("result")
         return response
+
+if __name__ == "__main__":
+    client = LogseqAPIClient()
+    # print(client.get_all_pages())
+    # print(client.get_page('RaaS'))
+    # print(client.get_block('683189b4-3312-4c8e-a3d5-9b36afb662e6'))
+    print(client.search_blocks('RaaS'))
